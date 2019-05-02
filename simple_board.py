@@ -29,16 +29,19 @@ def create_board(num_pnts):
 	
 	
 	return board
+def trans_point(X, x_shift=0, y_shift=0, z_shift=0):
+	X[0]+=x_shift
+	X[1]+=y_shift
+	X[2]+=z_shift
+	return X
 
-def trans_x_y(y_shift, x_shift, board):	
-	x_shift_arr = np.full(num_pnts*num_pnts, x_shift, dtype = int) #array of 'shift's 
-	y_shift_arr = np.full(num_pnts*num_pnts, y_shift, dtype = int) 
-
-
+def trans_x_y_z(board, x_shift=0, y_shift=0, z_shift=0):	
+	
 	boardtrans_x_y = np.array(board) #create new board so we don't modify original
 
 	boardtrans_x_y[0,:]+=x_shift #add to x row
 	boardtrans_x_y[1,:]+=y_shift #add to y row
+	boardtrans_x_y[2,:]+=z_shift #add to y row
 	return boardtrans_x_y
 
 def rotate_point(X, theta, axis='x'):
@@ -94,26 +97,30 @@ def plot_board_2d(board, marker):
 		
 
 if __name__ == '__main__':
+
+	#this is all just me testing stuff
 	num_pnts = 5
 	shift = 2
  	
 	board = create_board(num_pnts)
 	#print(board)
 	
-	boardtrans_x_y = trans_x_y(shift, shift, board)
-	
+	boardtrans_x_y = trans_x_y_z(board,shift, shift)
+	boardtrans_x_y[:3,1] = trans_point(boardtrans_x_y[:3,1],shift, shift,shift)
+
+	print(boardtrans_x_y)
 	board_rot = rotate_board(board, 1.2)
-	print(board_rot[:3,1])
+	#print(board_rot[:3,1])
 	board_rot[:3,1] = rotate_point(board_rot[:3,1], 1.2, 'x')
 	board_rot[:3,2] = rotate_point(board_rot[:3,2], 1.2, 'x')
 	board_rot[:3,5] = rotate_point(board_rot[:3,1], 1.2, 'y')
 	board_rot[:3,6] = rotate_point(board_rot[:3,2], 1.2, 'y')
-	print(board_rot)
+	#print(board_rot)
 	fig = plt.figure()
 	ax = fig.add_subplot(111, projection='3d')
 	plot_board_3d(board, ax, 'b', 'o')
-	#plot_board_3d(boardtrans_x_y, ax, 'g', '>')
-	plot_board_3d(board_rot,  ax, 'r', '*')
+	plot_board_3d(boardtrans_x_y, ax, 'g', '>')
+	#plot_board_3d(board_rot,  ax, 'r', '*')
 	ax.set_xlabel('X Label')
 	ax.set_ylabel('Y Label')
 	ax.set_zlabel('Z Label')
