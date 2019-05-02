@@ -42,37 +42,25 @@ def trans_x_y(y_shift, x_shift, board):
 	return boardtrans_x_y
 
 
-def rotate(X, theta, axis='x'):
-  '''Rotate multidimensional array `X` `theta` degrees around axis `axis`'''
-  c, s = np.cos(theta), np.sin(theta)
-  if axis == 'x': return np.dot(np.array([
-    [1.,  0,  0],
-    [0 ,  c, -s],
-    [0 ,  s,  c]
-  ]), X)
-  elif axis == 'y': return np.dot(np.array([
-    [c,  0,  -s],
-    [0,  1,   0],
-    [s,  0,   c]
-  ]), X)
-  elif axis == 'z': return np.dot(X, np.array([
-    [c, -s,  0 ],
-    [s,  c,  0 ],
-    [0,  0,  1.],
-  ]), X)
-
-def rot(board):
-	#r1 = R.from_euler('x', 180, degrees=True)
-	#print(r1.as_quat())
-	
+def rotate(board, theta, axis='x'):
+	'''Rotate multidimensional array `X` `theta` degrees around axis `axis`'''
 	board_rot = np.array(board)
-	rot = rotate(board_rot[:3,:], 1.2, 'x')
-	return rot
-
-def euler_rot(angle, board):
-	r1 = R.from_euler('x', angle, degrees=True)
-	board_rot = np.array(board)
-	return r1.apply( board_rot[:3,:])
+	c, s = np.cos(theta), np.sin(theta)
+	if axis == 'x': return np.dot(np.array([
+    		[1.,  0,  0],
+    		[0 ,  c, -s],
+    		[0 ,  s,  c]
+  		]), board_rot[:3,:])
+	elif axis == 'y': return np.dot(np.array([
+    		[c,  0,  -s],
+    		[0,  1,   0],
+    		[s,  0,   c]
+  		]), board_rot[:3,:])
+	elif axis == 'z': return np.dot(X, np.array([
+    		[c, -s,  0 ],
+    		[s,  c,  0 ],
+    		[0,  0,  1.],
+  		]), board_rot[:3,:])
 
 
 def plot_board_3d(board,  ax, c, m):
@@ -94,7 +82,7 @@ if __name__ == '__main__':
 	
 	boardtrans_x_y = trans_x_y(shift, shift, board)
 	
-	board_rot = rot(board)
+	board_rot = rotate(board, 1.2)
 	print(board_rot)
 
 	fig = plt.figure()
