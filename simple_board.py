@@ -41,8 +41,27 @@ def trans_x_y(y_shift, x_shift, board):
 	boardtrans_x_y[1,:]+=y_shift #add to y row
 	return boardtrans_x_y
 
+def rotate_point(X, theta, axis='x'):
+	'''Rotate multidimensional array `X` `theta` degrees around axis `axis`'''
+	c, s = np.cos(theta), np.sin(theta)
+	if axis == 'x': X = np.dot(np.array([
+    		[1.,  0,  0],
+    		[0 ,  c, -s],
+    		[0 ,  s,  c]
+  		]), X)
+	elif axis == 'y': X = np.dot(np.array([
+    		[c,  0,  -s],
+    		[0,  1,   0],
+    		[s,  0,   c]
+  		]), X)
+	elif axis == 'z': X = np.dot(X, np.array([
+    		[c, -s,  0 ],
+    		[s,  c,  0 ],
+    		[0,  0,  1.],
+  		]), X)
+	return X
 
-def rotate(board, theta, axis='x'):
+def rotate_board(board, theta, axis='x'):
 	'''Rotate multidimensional array `X` `theta` degrees around axis `axis`'''
 	board_rot = np.array(board)
 	c, s = np.cos(theta), np.sin(theta)
@@ -56,7 +75,7 @@ def rotate(board, theta, axis='x'):
     		[0,  1,   0],
     		[s,  0,   c]
   		]), board_rot[:3,:])
-	elif axis == 'z': return np.dot(X, np.array([
+	elif axis == 'z': return np.dot(np.array([
     		[c, -s,  0 ],
     		[s,  c,  0 ],
     		[0,  0,  1.],
@@ -71,6 +90,7 @@ def plot_board_3d(board,  ax, c, m):
 def plot_board_2d(board, marker):
 	plt.plot(board[0,:], board[1,:], marker)
 	plt.grid(True)
+
 		
 
 if __name__ == '__main__':
@@ -82,9 +102,13 @@ if __name__ == '__main__':
 	
 	boardtrans_x_y = trans_x_y(shift, shift, board)
 	
-	board_rot = rotate(board, 1.2)
+	board_rot = rotate_board(board, 1.2)
+	print(board_rot[:3,1])
+	board_rot[:3,1] = rotate_point(board_rot[:3,1], 1.2, 'x')
+	board_rot[:3,2] = rotate_point(board_rot[:3,2], 1.2, 'x')
+	board_rot[:3,5] = rotate_point(board_rot[:3,1], 1.2, 'y')
+	board_rot[:3,6] = rotate_point(board_rot[:3,2], 1.2, 'y')
 	print(board_rot)
-
 	fig = plt.figure()
 	ax = fig.add_subplot(111, projection='3d')
 	plot_board_3d(board, ax, 'b', 'o')
