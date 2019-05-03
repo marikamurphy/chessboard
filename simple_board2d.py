@@ -64,6 +64,11 @@ def hom_cart_trans(board):
 	board_cart = board_cart[:-1,:] / board[-1,:]
 	return board_cart
 
+def hom_3Dto2D(board3D):
+	board2D = np.array(board3D)
+	board2D = board2D / board2D[-1,:]
+	return np.concatenate((board2D[:2,:], [board2D[-1]]), axis = 0)
+
 def rot_mat(rot1, rot2, rot3):
 	rot_vec = np.array([rot1,rot2,rot3])
 	rot_mat = np.zeros((3,3))
@@ -71,8 +76,16 @@ def rot_mat(rot1, rot2, rot3):
 	return rot_mat #3x3
 
 def rigid_trans(rot_mat, trans_mat):
-	return 0 # 4x4
+	trans_mat = np.array(trans_mat)
+	RT_mat = np.concatenate((rot_mat, trans_mat), axis = 1)
 	
+	RT_mat = np.concatenate((RT_mat, np.array([[0, 0, 0, 1]]) ), axis = 0)
+	# this is our {R  T}
+	#              {0001}
+	return RT_mat # 4x4
+
+def transform_matrix(board, rigid_trans_mat):
+	return np.dot(rigid_trans_mat, board)	
 
 def plot_board_2d(board, marker):
 	plt.plot(board[0,:], board[1,:], marker)
@@ -90,13 +103,24 @@ if __name__ == '__main__':
 	print(board3D)
 	print("board_3Dcart")
 	print(board_3Dcart)
-
+	plot_board_2d(hom_cart_trans(board3D), 'ro')
 	board2D = create_board2D(num_pnts)
 	board_2Dcart = hom_cart_trans(board2D)
 	print("board2D")
 	print(board2D)
 	print("board_2Dcart")
 	print(board_2Dcart)
-	print(rot_mat(math.pi,0.0,0.0))
+	print("rigid transformation")
+	rot_mat = rot_mat(math.pi,0.0,math.pi)
+	rigid_trans_mat = rigid_trans(rot_mat, [[0],[0], [0]])
+	trans_mat = transform_matrix(board3D, rigid_trans_mat)
+	plot_board_2d(hom_cart_trans(trans_mat), 'b*')
+	print(hom_cart_trans(trans_mat))
+
+	board2D = hom_3Dto2D(trans_mat)
+	print("trans_mat")
+	print(trans_mat)
+	print("board2D")
+	print(board2D)
 	plt.show()
 
