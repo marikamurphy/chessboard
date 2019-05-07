@@ -1,7 +1,7 @@
 #simple plot of checkerboard points and entire board shifted +1 in y-direction
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.spatial.transform import Rotation as R
+
 from mpl_toolkits.mplot3d import Axes3D
 import math
 import random
