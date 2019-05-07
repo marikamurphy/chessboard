@@ -121,6 +121,11 @@ def create_h_matrix(originalBoard3D, rotatedBoard):
 
     return h_matrix.reshape(2*len(originalBoard[0]),9)
 
+def solve(matrix):
+
+	zero_mat = np.zeros(matrix.shape[0])
+	return np.linalg.lstsq(matrix, zero_mat)[0].reshape(3,3)
+
 
 if __name__ == '__main__':
 
