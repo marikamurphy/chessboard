@@ -25,7 +25,7 @@ def create_board3D(num_pnts):
 	w = np.full(num_pnts*num_pnts, 1, dtype = int) # all 1s
 
 	for num in range(1, num_pnts):
-		y = np.concatenate((y,  np.arange(0, num_pnts)), axis = 0) 
+		y = np.concatenate((y,  np.arange(0, num_pnts)), axis = 0)
 		board = np.concatenate((board,  np.full(num_pnts, num, dtype =int)), axis = 0)
 
 	board = np.concatenate((board, y), axis = 0)
@@ -36,7 +36,7 @@ def create_board3D(num_pnts):
 	#[[x],
 	# [y],
 	# [z],
-	# [w]] 
+	# [w]]
 
 	return board
 
@@ -46,7 +46,7 @@ def create_board2D(num_pnts):
 	w = np.full(num_pnts*num_pnts, 1, dtype = int) # all 1s
 
 	for num in range(1, num_pnts):
-		y = np.concatenate((y,  np.arange(0, num_pnts)), axis = 0) 
+		y = np.concatenate((y,  np.arange(0, num_pnts)), axis = 0)
 		board = np.concatenate((board,  np.full(num_pnts, num, dtype =int)), axis = 0)
 
 	board = np.concatenate((board, y), axis = 0)
@@ -55,10 +55,10 @@ def create_board2D(num_pnts):
 	#[x,y,z,w] becomes ...
 	#[[x],
 	# [y],
-	# [w]] 
+	# [w]]
 
 	return board
-	
+
 
 def hom_cart_trans(board):
 	board_cart = np.array(board) #otherwise we modify board passed into method
@@ -79,14 +79,14 @@ def rot_mat(rot1, rot2, rot3):
 def rigid_trans(rot_mat, trans_mat):
 	trans_mat = np.array(trans_mat)
 	RT_mat = np.concatenate((rot_mat, trans_mat), axis = 1)
-	
+
 	RT_mat = np.concatenate((RT_mat, np.array([[0, 0, 0, 1]]) ), axis = 0)
 	# this is our {R  T}
 	#              {0001}
 	return RT_mat # 4x4
 
 def transform_matrix(board, rigid_trans_mat):
-	return np.dot(rigid_trans_mat, board)	
+	return np.dot(rigid_trans_mat, board)
 
 def plot_board_2d(board, marker):
 	plt.plot(board[0,:], board[1,:], marker)
@@ -96,39 +96,66 @@ def random_trans_generator():
 	rand1 = random.random()*math.pi
 	rand2 = random.random()*math.pi
 	rand3 =	random.random()*math.pi
-	
-	return rot_mat(rand1,rand2,rand3)		
+
+	return rot_mat(rand1,rand2,rand3)
+
+#Building the homography matrix
+#takes in the original board and the rotated board
+def create_h_matrix(originalBoard3D, rotatedBoard):
+    #3D to 2D board to get x, y, z coordinates
+    originalBoard = hom_3Dto2D(originalBoard3D)
+    #original
+    h_matrix = np.array([])
+    for c in range(0, len(originalBoard[0])):
+        #original matrix
+        x = originalBoard[0,c]
+        y = originalBoard[1,c]
+        w = originalBoard[2,c]
+        #rotated matrix
+        _x = rotatedBoard[0,c]
+        _y = rotatedBoard[1,c]
+        _w = rotatedBoard[2,c]
+
+        point_matrix = np.array([0, 0, 0, -_w*x, -_w*y, -_w*w, -_y*x, -_y*y, -_y*w, _w*x, _w*y, _w*w, 0, 0, 0, -_x*x, -_x*y, -x*w])
+        h_matrix = np.concatenate((h_matrix,point_matrix),axis=0);
+
+    return h_matrix.reshape(2*len(originalBoard[0]),9)
+
 
 if __name__ == '__main__':
 
-	num_pnts = 5
- 
-	board3D = create_board3D(num_pnts)
-	#board_3Dcart = hom_cart_trans(board3D)
-	#print("board3D")
-	#print(board3D)
-	#print("board_3Dcart")
-	#print(board_3Dcart)
-	plot_board_2d(hom_cart_trans(board3D), 'ro')
-	board2D = create_board2D(num_pnts)
-	board_2Dcart = hom_cart_trans(board2D)
-	#print("board2D")
-	#print(board2D)
-	#print("board_2Dcart")
-	#print(board_2Dcart)
+    num_pnts = 5
 
-	print("rigid transformation")
-	rot_mat = random_trans_generator() #arbitrary rotation
-	rigid_trans_mat = rigid_trans(rot_mat, [[0],[0], [0]])
-	trans_mat = transform_matrix(board3D, rigid_trans_mat)
-	plot_board_2d(hom_cart_trans(trans_mat), 'b*')
-	
-	print(hom_cart_trans(trans_mat))
+    board3D = create_board3D(num_pnts)
+    #board_3Dcart = hom_cart_trans(board3D)
+    #print("board3D")
+    #print(board3D)
+    #print("board_3Dcart")
+    #print(board_3Dcart)
+    plot_board_2d(hom_cart_trans(board3D), 'ro')
+    board2D = create_board2D(num_pnts)
+    board_2Dcart = hom_cart_trans(board2D)
+    #print("board2D")
+    #print(board2D)
+    #print("board_2Dcart")
+    #print(board_2Dcart)
 
-	board2D = hom_3Dto2D(trans_mat)
-	#print("trans_mat")
-	#print(trans_mat)
-	#print("board2D")
-	#print(board2D)
-	plt.show()
+    print("rigid transformation")
+    rot_mat = random_trans_generator() #arbitrary rotation
+    rigid_trans_mat = rigid_trans(rot_mat, [[0],[0], [0]])
+    trans_mat = transform_matrix(board3D, rigid_trans_mat)
+    plot_board_2d(hom_cart_trans(trans_mat), 'b*')
 
+    print(hom_cart_trans(trans_mat))
+
+    board2D = hom_3Dto2D(trans_mat)
+    #print("trans_mat")
+    #print(trans_mat)
+    #print("board2D")
+    #print(board2D)
+
+    hMat = create_h_matrix(board3D, board2D)
+    print("hmat")
+    print(hMat)
+    plt.show()
+    print('end')
