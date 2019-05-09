@@ -100,10 +100,9 @@ def random_trans_generator():
 	return rot_mat(rand1,rand2,rand3)
 
 #Building the homography matrix
-#takes in the original board and the rotated board
-def create_h_matrix(originalBoard3D, rotatedBoard):
-    #3D to 2D board to get x, y, z coordinates
-    originalBoard = hom_3Dto2D(originalBoard3D)
+#takes in the original board and the rotated board in 2D
+def create_h_matrix(originalBoard, rotatedBoard):
+    
     #original
     h_matrix = np.array([])
     for c in range(0, len(originalBoard[0])):
@@ -123,8 +122,9 @@ def create_h_matrix(originalBoard3D, rotatedBoard):
 
 def solve(matrix):
 
-	zero_mat = np.zeros(matrix.shape[0])
-	return np.linalg.lstsq(matrix, zero_mat)[0].reshape(3,3)
+	return np.linalg.svd(hMat)[2][:,-2].reshape((3,3))
+	
+	
 
 
 if __name__ == '__main__':
@@ -132,35 +132,38 @@ if __name__ == '__main__':
     num_pnts = 5
 
     board3D = create_board3D(num_pnts)
-    #board_3Dcart = hom_cart_trans(board3D)
-    #print("board3D")
-    #print(board3D)
-    #print("board_3Dcart")
-    #print(board_3Dcart)
-    plot_board_2d(hom_cart_trans(board3D), 'ro')
-    board2D = create_board2D(num_pnts)
-    board_2Dcart = hom_cart_trans(board2D)
-    #print("board2D")
-    #print(board2D)
-    #print("board_2Dcart")
-    #print(board_2Dcart)
-
-    print("rigid transformation")
+    board2D = hom_3Dto2D(board3D)
+    
+    #plot_board_2d(hom_cart_trans(board3D), 'ro')
+    
+    #print("rigid transformation")
     rot_mat = random_trans_generator() #arbitrary rotation
     rigid_trans_mat = rigid_trans(rot_mat, [[0],[0], [0]])
     trans_mat = transform_matrix(board3D, rigid_trans_mat)
+    
     plot_board_2d(hom_cart_trans(trans_mat), 'b*')
 
-    print(hom_cart_trans(trans_mat))
+    #print(hom_cart_trans(trans_mat))
 
-    board2D = hom_3Dto2D(trans_mat)
+    board2DTrans = hom_3Dto2D(trans_mat)
     #print("trans_mat")
     #print(trans_mat)
     #print("board2D")
-    #print(board2D)
+    #print(board2D) 
 
-    hMat = create_h_matrix(board3D, board2D)
-    print("hmat")
-    print(hMat)
+    hMat = create_h_matrix(board3D, board2DTrans)
+    
+    solved = solve(hMat)
+
+    product = np.dot(solved,board2D)
+    product2 = np.dot(solved,board2DTrans)	
+    plot_board_2d(product, 'go')
+    plot_board_2d(product2, 'r.')
+    #print(temp)
+    #print("hmat")
+    #print(hMat)
+    #solved = solve(hMat)
+    #print("solved?")
+    print(solved)
     plt.show()
     print('end')
