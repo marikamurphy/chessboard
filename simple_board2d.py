@@ -122,7 +122,7 @@ def create_h_matrix(originalBoard, rotatedBoard):
 
 def solve(matrix):
 
-	return np.linalg.svd(hMat)[2][:,-2].reshape((3,3))
+	return np.linalg.svd(matrix)[2][:,-2].reshape((3,3))
 	
 	
 
@@ -140,30 +140,37 @@ if __name__ == '__main__':
     rot_mat = random_trans_generator() #arbitrary rotation
     rigid_trans_mat = rigid_trans(rot_mat, [[0],[0], [0]])
     trans_mat = transform_matrix(board3D, rigid_trans_mat)
-    
-    plot_board_2d(hom_cart_trans(trans_mat), 'b*')
 
     #print(hom_cart_trans(trans_mat))
 
     board2DTrans = hom_3Dto2D(trans_mat)
+    plot_board_2d(hom_cart_trans(board2DTrans), 'bo')
     #print("trans_mat")
     #print(trans_mat)
     #print("board2D")
-    #print(board2D) 
+    
+    
 
-    hMat = create_h_matrix(board3D, board2DTrans)
+    hMat = create_h_matrix(board2D, board2DTrans)
     
     solved = solve(hMat)
 
-    product = np.dot(solved,board2D)
-    product2 = np.dot(solved,board2DTrans)	
-    plot_board_2d(product, 'go')
-    plot_board_2d(product2, 'r.')
+    
     #print(temp)
     #print("hmat")
     #print(hMat)
     #solved = solve(hMat)
     #print("solved?")
+    b1 = board2D[:2].transpose()
+    b2 = board2DTrans[:2].transpose()
+    temp = cv2.findHomography(b1, b2)
+
+    product = np.dot(solved,board2D)
+    product2 = np.dot(temp[0],board2D)	
+    plot_board_2d(product, 'go')
+    plot_board_2d(product2, 'r.') 
+
+    print(temp[0])
     print(solved)
     plt.show()
     print('end')
