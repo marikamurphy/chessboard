@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import math
 import random
+import copy
 
 import sys
 ros_path = '/opt/ros/kinetic/lib/python2.7/dist-packages'
@@ -19,6 +20,7 @@ sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 
 
 def create_board3D(num_pnts):
+	# Returns a new array with fill value, in this case 0
 	board = np.full(num_pnts, 0, dtype = int) #(this is x) 0, 0, 0...1, 1, ..
 	y = np.arange(0, num_pnts) # 0, 1 ... num_pnts-1
 	z = np.full(num_pnts*num_pnts, 0, dtype = int) #all 0s
@@ -102,29 +104,47 @@ def random_trans_generator():
 #Building the homography matrix
 #takes in the original board and the rotated board in 2D
 def create_h_matrix(originalBoard, rotatedBoard):
-    
+
     #original
-    h_matrix = np.array([])
+    h_list = []
     for c in range(0, len(originalBoard[0])):
         #original matrix
         x = originalBoard[0,c]
         y = originalBoard[1,c]
         w = originalBoard[2,c]
         #rotated matrix
-        _x = rotatedBoard[0,c]
-        _y = rotatedBoard[1,c]
-        _w = rotatedBoard[2,c]
+        _x = rotatedBoard[0, c]
+        _y = rotatedBoard[1, c]
+        _w = rotatedBoard[2, c]
 
-        point_matrix = np.array([0, 0, 0, -_w*x, -_w*y, -_w*w, -_y*x, -_y*y, -_y*w, _w*x, _w*y, _w*w, 0, 0, 0, -_x*x, -_x*y, -x*w])
-        h_matrix = np.concatenate((h_matrix,point_matrix),axis=0);
+        point_matrix_A = [0, 0, 0, -_w*x, -_w*y, -_w*w, _y*x,_y*y, _y*w]
+        point_matrix_B = [-_w*x, -_w*y, -_w*w, 0, 0, 0, _x*x, _x*y, _x*w]
+        h_list.append(point_matrix_B)
+        h_list.append(point_matrix_A)
+        #print(h_matrix)
+        #print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        #h_matrix = np.concatenate((h_matrix, point_matrix_A, point_matrix_B), axis=None)
+		
+    h_matrix = np.matrix(h_list)#h_matrix.reshape(2*len(originalBoard[0]),9)
+    print('NEWLY MADE H_MATRIX')
+    print (h_matrix)
 
-    return h_matrix.reshape(2*len(originalBoard[0]),9)
+    return h_matrix
 
 def solve(matrix):
+    temp = copy.deepcopy(matrix)
+    u, s, v = np.linalg.svd(temp)
+    h = np.reshape(v[8],(3,3))
+    h = (1/h.item(8))*h
+    return h
+    # print('Solved matrix, not reshaped')
+    # print(temp)
+    # temp = temp[2][:,-2].reshape((3,3))
+    # temp = (1/temp.item(8))*temp
+    # print(temp)
+    # return temp
 
-	return np.linalg.svd(matrix)[2][:,-2].reshape((3,3))
-	
-	
+
 
 
 if __name__ == '__main__':
@@ -133,9 +153,9 @@ if __name__ == '__main__':
 
     board3D = create_board3D(num_pnts)
     board2D = hom_3Dto2D(board3D)
-    
+
     #plot_board_2d(hom_cart_trans(board3D), 'ro')
-    
+
     #print("rigid transformation")
     rot_mat = random_trans_generator() #arbitrary rotation
     rigid_trans_mat = rigid_trans(rot_mat, [[0],[0], [0]])
@@ -148,14 +168,14 @@ if __name__ == '__main__':
     #print("trans_mat")
     #print(trans_mat)
     #print("board2D")
-    
-    
+
+
 
     hMat = create_h_matrix(board2D, board2DTrans)
-    
+
     solved = solve(hMat)
 
-    
+
     #print(temp)
     #print("hmat")
     #print(hMat)
@@ -164,13 +184,17 @@ if __name__ == '__main__':
     b1 = board2D[:2].transpose()
     b2 = board2DTrans[:2].transpose()
     temp = cv2.findHomography(b1, b2)
-
-    product = np.dot(solved,board2D)
-    product2 = np.dot(temp[0],board2D)	
-    plot_board_2d(product, 'go')
-    plot_board_2d(product2, 'r.') 
-
     print(temp[0])
-    print(solved)
+
+    product2 = np.dot(temp[0],board2D)
+    product = np.dot(solved,board2D)
+    
+    plot_board_2d(product, 'go')
+    plot_board_2d(product2, 'r.')
+
+
+    #print(temp[0])
+    #print(solved)
     plt.show()
     print('end')
+
