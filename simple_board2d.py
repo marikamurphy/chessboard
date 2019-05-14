@@ -18,14 +18,15 @@ import cv2
 
 sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 
-
+#Creates an NxN 3D board with rows x, y, z, w
 def create_board3D(num_pnts):
-	# Returns a new array with fill value, in this case 0
+    # Returns a new array with fill value, in this case 0
 	board = np.full(num_pnts, 0, dtype = int) #(this is x) 0, 0, 0...1, 1, ..
 	y = np.arange(0, num_pnts) # 0, 1 ... num_pnts-1
 	z = np.full(num_pnts*num_pnts, 0, dtype = int) #all 0s
 	w = np.full(num_pnts*num_pnts, 1, dtype = int) # all 1s
 
+    #concatenate the arrays together
 	for num in range(1, num_pnts):
 		y = np.concatenate((y,  np.arange(0, num_pnts)), axis = 0)
 		board = np.concatenate((board,  np.full(num_pnts, num, dtype =int)), axis = 0)
@@ -42,6 +43,7 @@ def create_board3D(num_pnts):
 
 	return board
 
+#Creates an NxN 2D board with rows x, y, w
 def create_board2D(num_pnts):
 	board = np.full(num_pnts, 0, dtype = int) #(this is x) 0, 0, 0...1, 1, ..
 	y = np.arange(0, num_pnts) # 0, 1 ... num_pnts-1
@@ -61,39 +63,45 @@ def create_board2D(num_pnts):
 
 	return board
 
-
+#Transforms a homogenous plane to cartesian plane
 def hom_cart_trans(board):
 	board_cart = np.array(board) #otherwise we modify board passed into method
 	board_cart = board_cart[:-1,:] / board[-1,:]
 	return board_cart
 
+#Transforms 3D matrix into a 2D Matrix
 def hom_3Dto2D(board3D):
 	board2D = np.array(board3D)
 	board2D = board2D / board2D[-1,:]
 	return np.concatenate((board2D[:2,:], [board2D[-1]]), axis = 0)
 
+#Rotates the matrix
 def rot_mat(rot1, rot2, rot3):
 	rot_vec = np.array([rot1,rot2,rot3])
 	rot_mat = np.zeros((3,3))
 	cv2.Rodrigues(rot_vec,rot_mat)
 	return rot_mat #3x3
 
+#Creates a rigid transformation matrix with rotation and translation
 def rigid_trans(rot_mat, trans_mat):
 	trans_mat = np.array(trans_mat)
 	RT_mat = np.concatenate((rot_mat, trans_mat), axis = 1)
 
 	RT_mat = np.concatenate((RT_mat, np.array([[0, 0, 0, 1]]) ), axis = 0)
-	# this is our {R  T}
-	#              {0001}
+	# this is our {R   T}
+	#             {000 1}
 	return RT_mat # 4x4
 
+#Apply rigid transformation to matrix
 def transform_matrix(board, rigid_trans_mat):
 	return np.dot(rigid_trans_mat, board)
 
+#Plot the board onto a graphics simulator
 def plot_board_2d(board, marker):
 	plt.plot(board[0,:], board[1,:], marker)
 	plt.grid(True)
 
+#generate random rotations and translations
 def random_trans_generator():
 	rand1 = random.random()*math.pi
 	rand2 = random.random()*math.pi
@@ -121,80 +129,43 @@ def create_h_matrix(originalBoard, rotatedBoard):
         point_matrix_B = [-_w*x, -_w*y, -_w*w, 0, 0, 0, _x*x, _x*y, _x*w]
         h_list.append(point_matrix_B)
         h_list.append(point_matrix_A)
-        #print(h_matrix)
-        #print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-        #h_matrix = np.concatenate((h_matrix, point_matrix_A, point_matrix_B), axis=None)
-		
-    h_matrix = np.matrix(h_list)#h_matrix.reshape(2*len(originalBoard[0]),9)
-    print('NEWLY MADE H_MATRIX')
-    print (h_matrix)
 
+    h_matrix = np.matrix(h_list)
     return h_matrix
 
+#Apply DLT to homography and transform original matrix to rotated
 def solve(matrix):
     temp = copy.deepcopy(matrix)
     u, s, v = np.linalg.svd(temp)
     h = np.reshape(v[8],(3,3))
     h = (1/h.item(8))*h
     return h
-    # print('Solved matrix, not reshaped')
-    # print(temp)
-    # temp = temp[2][:,-2].reshape((3,3))
-    # temp = (1/temp.item(8))*temp
-    # print(temp)
-    # return temp
 
-
+#Put everything together
+def findHomography(originalBoard, rotatedBoard):
+    h_matrix = create_h_matrix(originalBoard, rotatedBoard)
+    solvedMatrix = solve(h_matrix)
+    product = np.dot(solvedMatrix,board2D)
+    return product
 
 
 if __name__ == '__main__':
 
+    #Create original board
     num_pnts = 5
-
     board3D = create_board3D(num_pnts)
     board2D = hom_3Dto2D(board3D)
 
-    #plot_board_2d(hom_cart_trans(board3D), 'ro')
-
-    #print("rigid transformation")
+    #Create rotated board
     rot_mat = random_trans_generator() #arbitrary rotation
     rigid_trans_mat = rigid_trans(rot_mat, [[0],[0], [0]])
     trans_mat = transform_matrix(board3D, rigid_trans_mat)
-
-    #print(hom_cart_trans(trans_mat))
-
     board2DTrans = hom_3Dto2D(trans_mat)
     plot_board_2d(hom_cart_trans(board2DTrans), 'bo')
-    #print("trans_mat")
-    #print(trans_mat)
-    #print("board2D")
 
+    #find Homography and apply to original
+    product = findHomography(board2D, board2DTrans)
+    plot_board_2d(product, 'r*')
 
-
-    hMat = create_h_matrix(board2D, board2DTrans)
-
-    solved = solve(hMat)
-
-
-    #print(temp)
-    #print("hmat")
-    #print(hMat)
-    #solved = solve(hMat)
-    #print("solved?")
-    b1 = board2D[:2].transpose()
-    b2 = board2DTrans[:2].transpose()
-    temp = cv2.findHomography(b1, b2)
-    print(temp[0])
-
-    product2 = np.dot(temp[0],board2D)
-    product = np.dot(solved,board2D)
-    
-    plot_board_2d(product, 'go')
-    plot_board_2d(product2, 'r.')
-
-
-    #print(temp[0])
-    #print(solved)
     plt.show()
-    print('end')
-
+print('end')
