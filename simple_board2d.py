@@ -1,3 +1,4 @@
+
 #simple plot of checkerboard points and entire board shifted +1 in y-direction
 import numpy as np
 import matplotlib.pyplot as plt
@@ -168,4 +169,4 @@ if __name__ == '__main__':
     plot_board_2d(product, 'r*')
 
     plt.show()
-print('end')
+    print('end')
