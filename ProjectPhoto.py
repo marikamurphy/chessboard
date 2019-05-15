@@ -33,9 +33,9 @@ def makeImgMat(img):
     print('Number of Channels : ',channels) 
 
     num_pnts = height * width
-    xMat = np.full(num_pnts, 0, dtype = int)
-    yMat = np.full(num_pnts, 0, dtype = int)
-    wMat = np.full(num_pnts, 1, dtype = int)
+    xMat = np.full(num_pnts, 0.0, dtype = float)
+    yMat = np.full(num_pnts, 0.0, dtype = float)
+    wMat = np.full(num_pnts, 1.0, dtype = float)
     index = 0
     for r in range(0, height):
         for c in range (0, width):
@@ -47,20 +47,17 @@ def makeImgMat(img):
     wMat = wMat.reshape(height, width)
     return xMat, yMat, wMat, height, width
     
+# Returns 3 matrices, one for x, y and w.  Contains points altered
+# by homography matrix.  Each row and column corresponds to a pixel.
 def makeTransformedImage(hMat, x, y, w, height, width):
     for r in range(0, height):
         for c in range(0, width):
             temp = [x[r][c], y[r][c], w[r][c]]
             temp = temp @ hMat
-            
-            # a = temp.split()
-            # print('a')
-            # print(a[2])
-            # print(hMat.shape)
-            # print(temp[0][0])
-            # x[r][c] = temp[0][0]
-            # y[r][c] = temp[0][1]
-            # w[r][c] = temp[0][2]
+            temp = temp.reshape((temp.shape[1], 1))
+            x[r][c] = temp[0][0]
+            y[r][c] = temp[1][0]
+            w[r][c] = temp[2][0]
     return x, y, w
     
 
@@ -87,8 +84,11 @@ plt.grid(True)
 #find Homography and apply to original
 hMat = getHomographyMat(board2D, board2DTrans)
 x, y, w = makeTransformedImage(hMat, xMat, yMat, wMat, height, width)
+print('X MATRIX')
 print(x)
+print('Y MATRIX')
 print(y)
+print('W MATRIX')
 print(w)
 #plot_board_2d(product, 'r*')
 imgplot = plt.imshow(img)
