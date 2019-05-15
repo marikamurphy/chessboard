@@ -33,11 +33,41 @@ def makeImgMat(img):
     print('Number of Channels : ',channels) 
 
     num_pnts = height * width
-    iMat = np.full(num_pnts, 0, dtype = int)
+    xMat = np.full(num_pnts, 0, dtype = int)
+    yMat = np.full(num_pnts, 0, dtype = int)
+    wMat = np.full(num_pnts, 1, dtype = int)
+    index = 0
+    for r in range(0, height):
+        for c in range (0, width):
+            xMat[index] = c
+            yMat[index] = r
+            index = index + 1
+    xMat = xMat.reshape(height, width)
+    yMat = yMat.reshape(height, width)
+    wMat = wMat.reshape(height, width)
+    return xMat, yMat, wMat, height, width
+    
+def makeTransformedImage(hMat, x, y, w, height, width):
+    for r in range(0, height):
+        for c in range(0, width):
+            temp = [x[r][c], y[r][c], w[r][c]]
+            temp = temp @ hMat
+            
+            # a = temp.split()
+            # print('a')
+            # print(a[2])
+            # print(hMat.shape)
+            # print(temp[0][0])
+            # x[r][c] = temp[0][0]
+            # y[r][c] = temp[0][1]
+            # w[r][c] = temp[0][2]
+    return x, y, w
+    
 
-
+# Make image and image matrices
 img = mpimg.imread('logo.jpg')
-
+# Each is a matrix representing the x, y, or w value in the matrix
+xMat, yMat, wMat, height, width = makeImgMat(img)
 
 #Create original board
 num_pnts = 5
@@ -55,12 +85,16 @@ plt.grid(True)
 
 
 #find Homography and apply to original
-hMat = findHomography(board2D, board2DTrans)
+hMat = getHomographyMat(board2D, board2DTrans)
+x, y, w = makeTransformedImage(hMat, xMat, yMat, wMat, height, width)
+print(x)
+print(y)
+print(w)
 #plot_board_2d(product, 'r*')
 imgplot = plt.imshow(img)
 
 plt.show()
 print('end')
 
-makeImgMat(img)
+
 
