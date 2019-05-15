@@ -146,7 +146,7 @@ def solve(matrix):
 def findHomography(originalBoard, rotatedBoard):
     h_matrix = create_h_matrix(originalBoard, rotatedBoard)
     solvedMatrix = solve(h_matrix)
-    product = np.dot(solvedMatrix,board2D)
+    product = np.dot(solvedMatrix, originalBoard)
     return product
 
 

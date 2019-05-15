@@ -11,46 +11,56 @@ import copy
 import sys
 import cv2
 
-img = mpimg.imread('logo.jpg')
-imgplot = plt.imshow(img)
-plt.show()
 
-# Create the boards
+#Put everything together
+def getHomographyMat(originalBoard, rotatedBoard):
+    h_matrix = create_h_matrix(originalBoard, rotatedBoard)
+    solvedMatrix = solve(h_matrix)
+    return solvedMatrix
+
+#CREATE IMAGE MATRIX
+def makeImgMat(img):
+    # get dimensions of image
+    dimensions = img.shape
+    # height, width, number of channels in image
+    height = dimensions[0]
+    width = dimensions[1]
+    channels = dimensions[2]
+
+    print('Image Dimension    : ',dimensions)
+    print('Image Height       : ',height)
+    print('Image Width        : ',width)
+    print('Number of Channels : ',channels) 
+
+    num_pnts = height * width
+    iMat = np.full(num_pnts, 0, dtype = int)
+
+
+img = mpimg.imread('logo.jpg')
+
+
+#Create original board
 num_pnts = 5
 board3D = create_board3D(num_pnts)
 board2D = hom_3Dto2D(board3D)
 
-# Create a random transformation matrix
+#Create rotated board
 rot_mat = random_trans_generator() #arbitrary rotation
 rigid_trans_mat = rigid_trans(rot_mat, [[0],[0], [0]])
 trans_mat = transform_matrix(board3D, rigid_trans_mat)
-
 board2DTrans = hom_3Dto2D(trans_mat)
-plot_board_2d(hom_cart_trans(board2DTrans), 'bo')
-
-hMat = create_h_matrix(board2D, board2DTrans)
-
-solved = solve(hMat)
+carB2DT =hom_cart_trans(board2DTrans)
+plt.plot(carB2DT[0,:], carB2DT[1,:], 'bo')
+plt.grid(True)
 
 
-#print(temp)
-#print("hmat")
-#print(hMat)
-#solved = solve(hMat)
-#print("solved?")
-b1 = board2D[:2].transpose()
-b2 = board2DTrans[:2].transpose()
-temp = cv2.findHomography(b1, b2)
-print(temp[0])
+#find Homography and apply to original
+hMat = findHomography(board2D, board2DTrans)
+#plot_board_2d(product, 'r*')
+imgplot = plt.imshow(img)
 
-product2 = np.dot(temp[0],board2D)
-product = np.dot(solved,board2D)
-
-plot_board_2d(product, 'go')
-plot_board_2d(product2, 'r.')
-
-
-#print(temp[0])
-#print(solved)
 plt.show()
 print('end')
+
+makeImgMat(img)
+
