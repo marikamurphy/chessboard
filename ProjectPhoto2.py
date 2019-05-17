@@ -77,8 +77,9 @@ rigid_trans_mat = rigid_trans(rot_mat, [[0],[0], [0]])
 trans_mat = transform_matrix(board3D, rigid_trans_mat)
 board2DTrans = hom_3Dto2D(trans_mat)
 carB2DT =hom_cart_trans(board2DTrans)
-plt.subplot(3, 1, 1)
+plt.subplot(2, 2, 1)
 plt.plot(carB2DT[0,:], carB2DT[1,:], 'bo')
+plt.plot(carB2DT[0,0], 'ro')
 plt.grid(True)
 
 
@@ -92,13 +93,22 @@ print(y)
 print('W MATRIX')
 print(w)
 #plot_board_2d(product, 'r*')
-plt.subplot(3, 1, 2)
+plt.subplot(2, 2, 2)
 plt.imshow(img)
 
 
-plt.subplot(3, 1, 3)
+plt.subplot(2, 2, 3)
 img2 = cv2.remap(img, x.astype(np.float32), y.astype(np.float32), interpolation=cv2.INTER_LINEAR)
 plt.imshow(img2)
+plt.subplot(2, 2, 4)
+img_size = (height, width)
+img3 = cv2.warpPerspective(img, hMat, img_size)
+plt.imshow(img3)
 plt.show()
+#cv2.imshow('image',img2)
+#cv2.waitKey(0)
+#cv2.destroyAllWindows()
+
+
 print('end')
 
