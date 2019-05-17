@@ -104,11 +104,11 @@ def plot_board_2d(board, marker):
 
 #generate random rotations and translations
 def random_trans_generator():
-	rand1 = random.random()*math.pi
-	rand2 = random.random()*math.pi
-	rand3 =	random.random()*math.pi
+	rand1 = random.random()*math.pi/2
+	rand2 = random.random()*math.pi/2
+	rand3 =	random.random()*math.pi/2
 
-	return rot_mat(rand1,rand2,rand3)
+	return rot_mat(rand1,rand2, rand3)#change back to rand3
 
 #Building the homography matrix
 #takes in the original board and the rotated board in 2D
@@ -163,6 +163,7 @@ if __name__ == '__main__':
     trans_mat = transform_matrix(board3D, rigid_trans_mat)
     board2DTrans = hom_3Dto2D(trans_mat)
     plot_board_2d(hom_cart_trans(board2DTrans), 'bo')
+
 
     #find Homography and apply to original
     product = findHomography(board2D, board2DTrans)

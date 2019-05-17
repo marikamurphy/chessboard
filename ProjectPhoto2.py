@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from simple_board2d import *
+from padPhoto import *
 
 from mpl_toolkits.mplot3d import Axes3D
 import math
@@ -63,6 +64,9 @@ def makeTransformedImage(hMat, x, y, w, height, width):
 
 # Make image and image matrices
 img = mpimg.imread('logo.jpg')
+img = padImg(img,100)
+imgFLIP = img[::-1,:,:]
+
 # Each is a matrix representing the x, y, or w value in the matrix
 xMat, yMat, wMat, height, width = makeImgMat(img)
 
@@ -93,17 +97,17 @@ print(y)
 print('W MATRIX')
 print(w)
 #plot_board_2d(product, 'r*')
-plt.subplot(2, 2, 2)
-plt.imshow(img)
+ax1 = plt.subplot(2, 2, 2)
+ax1.imshow(imgFLIP, origin = 'lower')
 
 
-plt.subplot(2, 2, 3)
+ax2 = plt.subplot(2, 2, 3)
 img2 = cv2.remap(img, x.astype(np.float32), y.astype(np.float32), interpolation=cv2.INTER_LINEAR)
-plt.imshow(img2)
-plt.subplot(2, 2, 4)
-img_size = (height, width)
-img3 = cv2.warpPerspective(img, hMat, img_size)
-plt.imshow(img3)
+ax2.imshow(img2)
+ax3 = plt.subplot(2, 2, 4)
+img_size = (width, height)
+img3 = cv2.warpPerspective(imgFLIP, hMat, img_size)
+ax3.imshow(img3, origin = 'lower')
 plt.show()
 #cv2.imshow('image',img2)
 #cv2.waitKey(0)
