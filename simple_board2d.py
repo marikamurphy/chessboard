@@ -1,12 +1,14 @@
-
 #simple plot of checkerboard points and entire board shifted +1 in y-direction
 import numpy as np
 import matplotlib.pyplot as plt
-
 from mpl_toolkits.mplot3d import Axes3D
+from padPhoto import *
 import math
 import random
 import copy
+import matplotlib.image as mpimg
+import sys
+import cv2
 
 import sys
 ros_path = '/opt/ros/kinetic/lib/python2.7/dist-packages'
@@ -15,7 +17,6 @@ if ros_path in sys.path:
 
     sys.path.remove(ros_path)
 
-import cv2
 
 sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 
@@ -31,6 +32,39 @@ def create_board3D(num_pnts):
 	for num in range(1, num_pnts):
 		y = np.concatenate((y,  np.arange(0, num_pnts)), axis = 0)
 		board = np.concatenate((board,  np.full(num_pnts, num, dtype =int)), axis = 0)
+
+	board = np.concatenate((board, y), axis = 0)
+	board = np.concatenate((board, z), axis = 0)
+	board = np.concatenate((board, w), axis = 0)
+	board = np.reshape(board, (4, num_pnts * num_pnts)) #its one long array -> need to reshape
+	#[x,y,z,w] becomes ...
+	#[[x],
+	# [y],
+	# [z],
+	# [w]]
+
+	return board
+
+#Creates an NxN 3D board with rows x, y, z, w
+def create_board3D(num_pnts, img):
+    # Returns a new array with fill value, in this case 0
+	dimensions = img.shape
+    # height, width, number of channels in image
+	height = dimensions[0]
+
+	height_interval = height/(num_pnts-1)
+	width = dimensions[1]
+	width_interval = width/(num_pnts-1)
+
+	board = np.full(num_pnts, 0, dtype = int) #(this is x) 0, 0, 0...1, 1, ..
+	y = np.arange(0, height+1, height_interval) # 0, 1 ... num_pnts-1
+	z = np.full(num_pnts*num_pnts, 0, dtype = int) #all 0s
+	w = np.full(num_pnts*num_pnts, 1, dtype = int) # all 1s
+
+    #concatenate the arrays together
+	for num in range(1, num_pnts):
+		y = np.concatenate((y,  np.arange(0, height+1, height_interval)), axis = 0)
+		board = np.concatenate((board,  np.full(num_pnts, num*width_interval, dtype =int)), axis = 0)
 
 	board = np.concatenate((board, y), axis = 0)
 	board = np.concatenate((board, z), axis = 0)
@@ -151,23 +185,30 @@ def findHomography(originalBoard, rotatedBoard):
 
 
 if __name__ == '__main__':
+	img = mpimg.imread('logo.jpg')
+	img = makeSquare(img)
 
     #Create original board
-    num_pnts = 5
-    board3D = create_board3D(num_pnts)
-    board2D = hom_3Dto2D(board3D)
+	num_pnts = 5
+	board3D = create_board3D(num_pnts, img)
+	board2D = hom_3Dto2D(board3D)
 
-    #Create rotated board
-    rot_mat = random_trans_generator() #arbitrary rotation
-    rigid_trans_mat = rigid_trans(rot_mat, [[0],[0], [0]])
-    trans_mat = transform_matrix(board3D, rigid_trans_mat)
-    board2DTrans = hom_3Dto2D(trans_mat)
-    plot_board_2d(hom_cart_trans(board2DTrans), 'bo')
+	#Create rotated board
+	rot_mat = random_trans_generator() #arbitrary rotation
+	rigid_trans_mat = rigid_trans(rot_mat, [[0],[0], [0]])
+	trans_mat = transform_matrix(board3D, rigid_trans_mat)
+	board2DTrans = hom_3Dto2D(trans_mat)
+	plot_board_2d(hom_cart_trans(board2DTrans), 'bo')
+	plot_board_2d(hom_cart_trans(board2D), 'bo')
 
 
-    #find Homography and apply to original
-    product = findHomography(board2D, board2DTrans)
-    plot_board_2d(product, 'r*')
+	#find Homography and apply to original
+	product = findHomography(board2D, board2DTrans)
+	plot_board_2d(product, 'r*')
 
-    plt.show()
-    print('end')
+	cv2.imshow('img', img)
+	cv2.waitKey(10000)
+	cv2.destroyAllWindows()
+
+	plt.show()
+print('end')
