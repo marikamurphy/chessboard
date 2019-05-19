@@ -64,19 +64,19 @@ def makeTransformedImage(hMat, x, y, w, height, width):
     return x, y, w
     
 def copy_paste(chessImg, img3, corners):
-    # dimensions = chessImg.shape
-    # # height, width, number of channels in image
-    # height = dimensions[0]
-    # width = dimensions[1]
+    dimensions = chessImg.shape
+    # height, width, number of channels in image
+    height = dimensions[0]
+    width = dimensions[1]
     chessImg = Image.fromarray(chessImg)
 
     #print(corners)
     print(chessImg.size)
     print(img3.size)
     x1 = int(round(corners[0,0]))
-    y1 = int(round(corners[1,0]))
+    y1 = int(round(height-corners[1,0]))
     x2 = int(round(corners[0,-1]))
-    y2 = int(round(corners[1,-1]))
+    y2 = int(round(height-corners[1,-1]))
     # print(x1)
     # print(y1)
     # print(x2)
@@ -113,7 +113,25 @@ def copy_paste(chessImg, img3, corners):
 
     x,y,w,h = cv2.boundingRect(cnt)
     crop = img3[y:y+h,x:x+w]
-    croppedImg3 = Image.fromarray(crop)
+
+    tempimage = Image.fromarray(crop)
+    tempimage = tempimage.convert("RGBA")
+
+    datas = tempimage.getdata()
+
+    newData = []
+    for item in datas:
+        if item[0] == 0 and item[1] == 0 and item[2] == 0:
+            newData.append((255, 255, 255, 0))
+        else:
+            newData.append(item)
+
+    tempimage.putdata(newData)
+    #tempimage.save("transparent_background.jpg", "JPEG")
+
+    
+    #transparent = mpimg.imread('transparent_background.jpg')
+    #croppedImg3 = Image.fromarray(transparent)
 
 
 
@@ -123,7 +141,7 @@ def copy_paste(chessImg, img3, corners):
     # print(w)
 
 
-    chessImg.paste(croppedImg3,(x1, y1))
+    chessImg.paste(tempimage,(x1, y1))
     paste = np.array(chessImg)
 
     #print(paste)
@@ -135,7 +153,7 @@ def copy_paste(chessImg, img3, corners):
 img = mpimg.imread('logo.jpg')
 img = img.copy()
 img[np.where((img==[0,0,0]).all(axis=2))]=[2,2,2]
-cam_img = mpimg.imread('board6.jpg')
+cam_img = mpimg.imread('board8.jpg')
 img = makeSquare(img)
 
 img2 = Image.fromarray(img)
