@@ -1,4 +1,13 @@
+import sys
+ros_path = '/opt/ros/kinetic/lib/python2.7/dist-packages'
+
+if ros_path in sys.path:
+
+    sys.path.remove(ros_path)
+
 import cv2
+
+sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 
 
 def padImg(img, border_size):
