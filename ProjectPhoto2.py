@@ -238,7 +238,7 @@ plt.show()
 for r in range(0, num_pnts-1):
     for c in range(0, num_pnts-1):
         sub_board2D = board2D[r*num_pnts+c], board2D[r*num_pnts+(c+1)], board2D[(r+1)*num_pnts+c], board2D[(r+1)*num_pnts+(c+1)]
-        sub_board2DTrans = 
+        sub_board2DTrans = 0 
 
 
 
