@@ -49,28 +49,54 @@ imgpoints = [] # 2d points in image plane.
 #imgpoints.append(corners2)
 
 #(thresh, im_bw) = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-DEFAULT_WIDTH = 500
-img = cv2.imread('board8.jpg')
-gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-thresh = 127
-im_bw = cv2.threshold(gray, thresh, 255, cv2.THRESH_BINARY)[1]
-cv2.imshow("bw", im_bw)
+def getChessboardCorners(img):
+    DEFAULT_WIDTH = 500
+    #img = cv2.imread('board6.jpg')
+    gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    thresh = 127
+    im_bw = cv2.threshold(gray, thresh, 255, cv2.THRESH_BINARY)[1]
+    cv2.imshow("bw", im_bw)
 
-height, width = gray.shape[:2]
+    height, width = gray.shape[:2]
 
-scaleFactor0 = DEFAULT_WIDTH/width
+    scaleFactor0 = DEFAULT_WIDTH/width
 
-gray1 = cv2.resize(im_bw, None, fx=scaleFactor0, fy=scaleFactor0, interpolation = cv2.INTER_LINEAR)
-img1 = cv2.resize(img, None, fx=scaleFactor0, fy=scaleFactor0, interpolation = cv2.INTER_LINEAR)
-dimensions = (7,7)
-ret, corners = cv2.findChessboardCorners(gray1, dimensions , None)
-print(corners)
-cv2.drawChessboardCorners(img1, dimensions, corners , ret)
-cv2.imshow('img1',img1)
+    gray1 = cv2.resize(im_bw, None, fx=scaleFactor0, fy=scaleFactor0, interpolation = cv2.INTER_LINEAR)
+    img1 = cv2.resize(img, None, fx=scaleFactor0, fy=scaleFactor0, interpolation = cv2.INTER_LINEAR)
+    dimensions = (7,7)
+    ret, corners = cv2.findChessboardCorners(gray1, dimensions , None)
+    cv2.drawChessboardCorners(img1, dimensions, corners , ret)
+    corners = getHom2DMat(corners, img1)
+    return img1[::-1], corners
 
-cv2.waitKey(10000)
+def getHom2DMat(corners, img):
+    height = img.shape[0]
+    num_pnts = corners.shape[0]
+    board_hom = np.zeros(num_pnts*3)
+    board_hom = np.reshape(board_hom, (3, num_pnts))
 
-cv2.destroyAllWindows()
+    for i in range(0, num_pnts):
+        board_hom[0,i] = corners[i, 0, 0] #x
+        board_hom[1,i] = height-corners[i, 0, 1] #y
+        board_hom[2,i] = 1 #w
+
+
+    return board_hom
+
+
+if __name__ == '__main__':
+    img1, corners = getChessboardCorners()
+    print(corners)
+    print("-------------------------------------------------------------")
+    #corners = getHom2DMat(corners)
+    #print(corners)
+    cv2.imshow('img1',img1)
+
+    cv2.waitKey(0)
+
+    cv2.destroyAllWindows()
+
+print('end')
 # Find the chess board corners
 
 

@@ -79,14 +79,23 @@ def create_board3D(num_pnts, img):
 	return board
 
 #Creates an NxN 2D board with rows x, y, w
-def create_board2D(num_pnts):
-	board = np.full(num_pnts, 0, dtype = int) #(this is x) 0, 0, 0...1, 1, ..
-	y = np.arange(0, num_pnts) # 0, 1 ... num_pnts-1
+def create_board2D(num_pnts, img):
+	dimensions = img.shape
+    # height, width, number of channels in image
+	height = dimensions[0]
+
+	height_interval = height/(num_pnts-1)
+	width = dimensions[1]
+	width_interval = width/(num_pnts-1)
+
+	board = np.arange(0, width+1, width_interval) # 0, 1 ... num_pnts-1
+
+	y = np.full(num_pnts, height, dtype = int) #(this is y) 777...111..
 	w = np.full(num_pnts*num_pnts, 1, dtype = int) # all 1s
 
 	for num in range(1, num_pnts):
-		y = np.concatenate((y,  np.arange(0, num_pnts)), axis = 0)
-		board = np.concatenate((board,  np.full(num_pnts, num, dtype =int)), axis = 0)
+		board = np.concatenate((board,  np.arange(0, width+1, width_interval)), axis = 0)
+		y = np.concatenate((y,  np.full(num_pnts, height-(num*height_interval), dtype =int)), axis = 0)
 
 	board = np.concatenate((board, y), axis = 0)
 	board = np.concatenate((board, w), axis = 0)
@@ -95,6 +104,7 @@ def create_board2D(num_pnts):
 	#[[x],
 	# [y],
 	# [w]]
+	print(board)
 
 	return board
 
@@ -189,7 +199,9 @@ if __name__ == '__main__':
 	img = makeSquare(img)
 
     #Create original board
-	num_pnts = 5
+	num_pnts = 7
+	board3D = create_board3D(num_pnts, img)
+	board2D = hom_3Dto2D(board3D)
 	board3D = create_board3D(num_pnts, img)
 	board2D = hom_3Dto2D(board3D)
 
