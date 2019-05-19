@@ -74,13 +74,13 @@ def copy_paste(chessImg, img3, corners):
     print(chessImg.size)
     print(img3.size)
     x1 = int(round(corners[0,0]))
-    y1 = int(round(height-corners[1,0]))
-    x2 = int(round(corners[0,-1]))
-    y2 = int(round(height-corners[1,-1]))
-    # print(x1)
-    # print(y1)
-    # print(x2)
-    # print(y2)
+    y1 = int(round(corners[1,0]))
+    x2 = int(round(corners[0,-7]))
+    y2 = int(round(corners[1,-7]))
+    print(x1)
+    print(y1)
+    print(x2)
+    print(y2)
 
 
     
@@ -114,23 +114,44 @@ def copy_paste(chessImg, img3, corners):
     x,y,w,h = cv2.boundingRect(cnt)
     crop = img3[y:y+h,x:x+w]
 
-    tempimage = Image.fromarray(crop)
-    tempimage = tempimage.convert("RGBA")
+    # tempimage = Image.fromarray(crop)
+    # tempimage = tempimage.convert("RGBA")
 
-    datas = tempimage.getdata()
+    # datas = tempimage.getdata()
 
-    newData = []
-    for item in datas:
-        if item[0] == 0 and item[1] == 0 and item[2] == 0:
-            newData.append((255, 255, 255, 0))
-        else:
-            newData.append(item)
+    # newData = []
+    # for item in datas:
+    #     if item[0] == 0 and item[1] == 0 and item[2] == 0:
+    #         newData.append((255, 255, 255, 0))
+    #     else:
+    #         newData.append(item)
 
-    tempimage.putdata(newData)
-    #tempimage.save("transparent_background.jpg", "JPEG")
+    # tempimage.putdata(newData)
+    # tempimage.save("transparent_background.png", "PNG")
+
+    img1 = np.array(chessImg)
+    img2 = crop
+    # I want to put logo on top-left corner, So I create a ROI
+    rows,cols,channels = img2.shape
+    roi = img1[y2:rows+y2, x2:cols+x2]
+    # Now create a mask of logo and create its inverse mask also
+    img2gray = cv2.cvtColor(img2,cv2.COLOR_RGB2GRAY)
+    ret, mask = cv2.threshold(img2gray, 1, 255, cv2.THRESH_BINARY)
+    mask_inv = cv2.bitwise_not(mask)
+    print(roi)
+    cv2.imshow('roi',roi)
+    cv2.waitKey(0)
+    # Now black-out the area of logo in ROI
+    img1_bg = cv2.bitwise_and(roi,roi,mask = mask_inv)
+    # Take only region of logo from logo image.
+    img2_fg = cv2.bitwise_and(img2,img2,mask = mask)
+    # Put logo in ROI and modify the main image
+    dst = cv2.add(img1_bg,img2_fg)
+    img1[y2:rows+y2, x2:cols+x2 ] = dst
 
     
     #transparent = mpimg.imread('transparent_background.jpg')
+    # transparent = Image.open('transparent_background.png')
     #croppedImg3 = Image.fromarray(transparent)
 
 
@@ -140,13 +161,16 @@ def copy_paste(chessImg, img3, corners):
     # w=np.array(croppedImg3)
     # print(w)
 
-
-    chessImg.paste(tempimage,(x1, y1))
-    paste = np.array(chessImg)
+    # chessImg = chessImg.convert("RGBA")
+    # print(chessImg.mode)
+    # print(transparent.mode)
+    # chessImg.paste(transparent,(x1, y1))
+    # chessImg.save("chessimg.png", "PNG")
+    # paste = np.array(chessImg)
 
     #print(paste)
     #chessImg = cv2.bitwise_or(chessImg, crop)
-    return paste
+    return img1
 
 
 # Make image and image matrices
@@ -155,21 +179,6 @@ img = img.copy()
 img[np.where((img==[0,0,0]).all(axis=2))]=[2,2,2]
 cam_img = mpimg.imread('board8.jpg')
 img = makeSquare(img)
-
-img2 = Image.fromarray(img)
-img2 = img2.convert("RGBA")
-
-datas = img2.getdata()
-
-newData = []
-for item in datas:
-    if item[0] == 0 and item[1] == 0 and item[2] == 0:
-        newData.append((255, 255, 255, 0))
-    else:
-        newData.append(item)
-
-img2.putdata(newData)
-img2.save("img2.png", "PNG")
 
 imgFLIP = img[::-1,:,:]
 
@@ -190,7 +199,6 @@ chessImg, board2DTrans = getChessboardCorners(cam_img)
 carB2DT = hom_cart_trans(board2DTrans) #delete
 plt.subplot(2, 3, 1)
 plt.plot(carB2DT[0,:], carB2DT[1,:], 'bo')
-plt.plot(carB2DT[0,0], 'ro')
 plt.grid(True)
 
 
@@ -216,13 +224,26 @@ ax2 = plt.subplot(2, 3, 3)
 ax2.imshow(chessImg, origin = 'lower')
 ax3 = plt.subplot(2, 3, 4)
 img_size = (width, height)
-img3 = cv2.warpPerspective(imgFLIP, hMat, img_size)
-ax3.imshow(img3, origin = 'lower')
+img_warped = cv2.warpPerspective(imgFLIP, hMat, img_size)
+ax3.imshow(img_warped, origin = 'lower')
 
 ax4 = plt.subplot(2, 3, 5)
-pasted = copy_paste(chessImg,img3, board2DTrans)
+pasted = copy_paste(chessImg, img_warped, board2DTrans)
 ax4.imshow(pasted, origin = 'lower')
 plt.show()
+
+
+
+
+for r in range(0, num_pnts-1):
+    for c in range(0, num_pnts-1):
+        sub_board2D = board2D[r*num_pnts+c], board2D[r*num_pnts+(c+1)], board2D[(r+1)*num_pnts+c], board2D[(r+1)*num_pnts+(c+1)]
+        sub_board2DTrans = 
+
+
+
+
+
 # cv2.imshow('img3',img3)
 # cv2.waitKey(10000)
 # cv2.destroyAllWindows()
