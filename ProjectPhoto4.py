@@ -187,11 +187,8 @@ def indHomTrans(imgFLIP, board2D, board2DTrans, w1, h1, num_pnts, img1):
                 # Put logo in ROI and modify the main image
                 dst = cv2.add(img1_bg,img2_fg)
                 img1[y2:rows+y2, x1:cols+x1 ] = dst
-                cv2.imshow('img1',img1)
+                #cv2.imshow('img1',img1)
                 #cv2.waitKey(0)
-            
-            else:
-                print(index)
 
     return img1
             
